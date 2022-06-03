@@ -1,7 +1,12 @@
+
 # ----------------------------------------------------------------------
 # Debian container - gcc8.5
 # E3SM/ELM land model docker container
 # AMD64 version
+#
+# This is folked from author's github repository for purpose of improvement only
+# copyright belongs to author(s)
+#
 # ----------------------------------------------------------------------
 
 FROM fasstsimulation/baseos:gcc850ompi316-latest
@@ -13,8 +18,18 @@ LABEL maintainer.name="Shawn P. Serbin" \
       version.hlm="elm_v2-for-ngee" \
       version.baseos="gcc8.5"
 
+# python packages often used by ELM and data analysis
+RUN cd / \
+    && pip3 install --upgrade pip \
+    && pip3 install h5py \
+    && pip3 install mpi4py \
+    && pip3 install matplotlib \
+    && pip3 install pyproj \
+    && pip3 install dask
+    
 # where to get the ELM source code
-ENV REPOSITORY_URL=https://github.com/FASSt-simulation/simulation_containers
+#ENV REPOSITORY_URL=https://github.com/FASSt-simulation/simulation_containers
+ENV REPOSITORY_URL=https://github.com/fmyuan/simulation_containers
 ENV REPOSITORY_RAW_URL=https://raw.githubusercontent.com/FASSt-simulation/simulation_containers
 ENV TOOLS_REPOSITORY_RAW_URL=https://raw.githubusercontent.com/FASSt-simulation/fasst_simulation_tools
 ENV USER=modeluser
@@ -48,22 +63,28 @@ RUN cd / \
     && cd /
 
 ## Checkout ELM model
-RUN wget $REPOSITORY_URL/raw/main/docker/elm/elm_v2-for-ngee/e3sm_source/e3sm_v2.0.0_ngee.tar.gz \
-    && tar -zxvf e3sm_v2.0.0_ngee.tar.gz \
-    && rm e3sm_v2.0.0_ngee.tar.gz \
+RUN cd / \
+    && git -c http.sslVerify=false clone -b elm_v2-for-ngee --single-branch --depth 1 https://github.com/fmyuan/E3SM.git \
     && cd /E3SM \
+    && git submodule init \
+    && git submodule update -f
+
+RUN cd /E3SM \
     && cd /.cime \
-    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config/config \
-    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config/config_compilers.xml \
-    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config/config_machines.xml \
-    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config/gnu_docker.cmake \
+    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config \
+    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config_compilers.xml \
+    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config_machines.xml \
+    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/gnu_docker.cmake \
     && cd /home/$USER/.cime \
-    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config/config \
-    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config/config_compilers.xml \
-    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config/config_machines.xml \
-    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config/gnu_docker.cmake \
-    && cd / \
-    && ln -s /usr/bin/ncap2 /usr/bin/ncap \
+    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config \
+    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config_compilers.xml \
+    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config_machines.xml \
+    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/gnu_docker.cmake \
+    && cd /
+
+# Provide a symlink between ncap and ncap2 for OLMT 
+# Switch to using modeluser for test build (so it can find the ~/.cime docker machine configuration files)
+RUN ln -s /usr/bin/ncap2 /usr/bin/ncap \
     && chown $USER:dockerusers /E3SM \
     && chmod -R 777 /E3SM \
     && export USER=${USER}
@@ -98,10 +119,7 @@ USER ${USER}
 ## Install OLMT tool into the container to use with site or ensemble simulations
 # This uses a stable release of the Arctic-userpft branch of OLMT
 RUN cd /tools \
-    && git -c http.sslVerify=false clone -b Arctic-userpft --single-branch https://github.com/dmricciuto/OLMT.git \
-    && cd OLMT/ \
-    # add specific git commit as src
-    && git reset --hard '6284829d39dc4264989d7bfe8478345b2d749524' \
+    && git -c http.sslVerify=false clone -b Arctic-userpft --single-branch --depth 1 https://github.com/dmricciuto/OLMT.git \
     && chown $USER:dockerusers -R /tools/OLMT \
     && chmod -R 777 /tools/OLMT
 
