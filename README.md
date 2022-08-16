@@ -1,4 +1,4 @@
-# Dockerized versions of the CTSM, ELM and HLM-FATES models 
+# Dockerized versions of the ELM and HLM-FATES models 
 <br>
 
 
