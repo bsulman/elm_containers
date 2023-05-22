@@ -2,10 +2,10 @@
 # Debian container - gcc8.5
 # E3SM/ELM land model docker container
 # non-parallel version of HDF5 and netCDF for running OLMT ensembles
-# AMD64 version
+# AMD64/ARM64 version
 # ----------------------------------------------------------------------
 
-FROM fasstsimulation/baseos:gcc850ompi316-serial
+FROM fasstsimulation/baseos:gcc850ompi316-serial_multiarch
 LABEL maintainer.name="Shawn P. Serbin" \
       maintainer.email="sserbin@bnl.gov" \
       author.name="Shawn P. Serbin" \
@@ -53,8 +53,9 @@ RUN wget $REPOSITORY_URL/raw/main/docker/elm/elm_v2-for-ngee/e3sm_source/e3sm_v2
     && tar -zxvf e3sm_v2.0.0_ngee.tar.gz \
     && rm e3sm_v2.0.0_ngee.tar.gz \
     && cd /E3SM \
-    && git log \
-    && git branch \
+    && cd /E3SM/cime_config/machines/cmake_macros \
+    && rm gnu.cmake \
+    && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config_serial/gnu.cmake \
     && cd /.cime \
     && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config_serial/config \
     && wget $REPOSITORY_RAW_URL/main/docker/elm/cime_config_serial/config_compilers.xml \
@@ -103,7 +104,7 @@ RUN cd /tools \
     && git -c http.sslVerify=false clone -b Arctic-userpft --single-branch https://github.com/dmricciuto/OLMT.git \
     && cd OLMT/ \
     # add specific git commit as src - to try and stabilize changes and avoid new potential bugs
-    && git reset --hard 'aee6566536b8ea7dcb11f3c15d639999f4bc7c27' \
+    && git reset --hard 'c208528360d59f46630ef94fe4a3a42cbfd3acab' \
     && chown $USER:dockerusers -R /tools/OLMT \
     && chmod -R 777 /tools/OLMT
 
@@ -119,7 +120,7 @@ RUN cd /scripts \
     && chown $USER:dockerusers OLMT_docker_example.sh \
     && chown $USER:dockerusers OLMT_ens_docker_example.sh \
     && chmod +x OLMT_docker_example.sh \
-    && chmod +x OLMT_ens_docker_example.sh \ 
+    && chmod +x OLMT_ens_docker_example.sh \
     && wget $TOOLS_REPOSITORY_RAW_URL/main/elm_scripts/ngeearctic_elm_scripts/olmt_scripts/param_list_example_kougarok \
     && chown $USER:dockerusers param_list_example_kougarok \
     && wget $TOOLS_REPOSITORY_RAW_URL/main/elm_scripts/ngeearctic_elm_scripts/olmt_scripts/param_list_example_beo \
