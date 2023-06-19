@@ -7,7 +7,7 @@
       <DESC>Containerized E3SM-ELM</DESC>
       <NODENAME_REGEX>docker</NODENAME_REGEX>
       <OS>LINUX</OS>
-      <COMPILERS>gnu</COMPILERS>
+      <COMPILERS>gnu,nvidia,nvidiagpu</COMPILERS>
       <MPILIBS>openmpi,mpi-serial</MPILIBS>
       <PROJECT>docker_runs</PROJECT>
       <CIME_OUTPUT_ROOT>/output</CIME_OUTPUT_ROOT>
