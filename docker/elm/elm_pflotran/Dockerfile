@@ -108,13 +108,14 @@ RUN cd / && git clone -b alquimia_compile_fix --recursive https://github.com/bsu
     && make install \
     && cd ../.. \
     && python3 make_alquimia_python_interface.py \
-    && python3 network_for_ELM.py
+    && python3 network_for_ELM.py \
+    && chmod -R 777 /REDOX-PFLOTRAN
 
 
 ## Checkout ELM model
 # Submodule update command is replacing ssh with https so authentication to github isn't required
 RUN cd / \
-    && git -c http.sslVerify=false clone -b coastal_main_rebase --single-branch --depth 1 https://github.com/bsulman/E3SM.git \
+    && git -c http.sslVerify=false clone -b bsulman/lnd/alquimia_salinity --single-branch --depth 1 https://github.com/bsulman/E3SM.git \
     && cd /E3SM \
     && git submodule init \
     && git -c url."https://github.com/".insteadOf="git@github.com:" submodule update -f
@@ -122,17 +123,16 @@ RUN cd / \
 RUN cd /E3SM \
     && cd /.cime \
     && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config \
-    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config_compilers.xml \
+    && wget https://github.com/bsulman/elm_containers/raw/elm_pflotran/docker/elm/cime_config_alquimia/config_compilers.xml \
     && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config_machines.xml \
-    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/gnu_docker.cmake \
+    && wget https://github.com/bsulman/elm_containers/raw/elm_pflotran/docker/elm/cime_config_alquimia/gnu_docker.cmake \
     && cd /home/$USER/.cime \
     && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config \
-    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config_compilers.xml \
+    && wget https://github.com/bsulman/elm_containers/raw/elm_pflotran/docker/elm/cime_config_alquimia/config_compilers.xml \
     && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/config_machines.xml \
-    && wget $REPOSITORY_URL/raw/main/docker/elm/cime_config/gnu_docker.cmake \
+    && wget https://github.com/bsulman/elm_containers/raw/elm_pflotran/docker/elm/cime_config_alquimia/gnu_docker.cmake \
     && cd /
 
-RUN echo '\nset(ALQUIMIA_PATH "/REDOX-PFLOTRAN/alquimia/build/alquimia")' >> /.cime/gnu_docker.cmake
 
 # Provide a symlink between ncap and ncap2 for OLMT 
 # Switch to using modeluser for test build (so it can find the ~/.cime docker machine configuration files)
@@ -173,7 +173,7 @@ USER ${USER}
 ## Install OLMT tool into the container to use with site or ensemble simulations
 # This uses a stable release of the Arctic-userpft branch of OLMT
 RUN cd /tools \
-    && git -c http.sslVerify=false clone -b bsulman/coastal_main --single-branch --depth 1 https://github.com/dmricciuto/OLMT.git \
+    && git -c http.sslVerify=false clone -b bsulman/coastal_main_rebased --single-branch --depth 1 https://github.com/dmricciuto/OLMT.git \
     && chown $USER:dockerusers -R /tools/OLMT \
     && chmod -R 777 /tools/OLMT
 
