@@ -115,10 +115,11 @@ RUN cd / && git clone -b alquimia_compile_fix --recursive https://github.com/bsu
 ## Checkout ELM model
 # Submodule update command is replacing ssh with https so authentication to github isn't required
 RUN cd / \
-    && git -c http.sslVerify=false clone -b bsulman/lnd/alquimia_salinity --single-branch --depth 1 https://github.com/bsulman/E3SM.git \
-    && cd /E3SM \
-    && git submodule init \
-    && git -c url."https://github.com/".insteadOf="git@github.com:" submodule update -f
+    && git -c http.sslVerify=false -c url."https://github.com/".insteadOf="git@github.com:" clone -b bsulman/lnd/alquimia_salinity --single-branch --depth 1 --recurse-submodules --shallow-submodules https://github.com/bsulman/E3SM.git \
+    # && cd /E3SM \
+    # && git -c http.sslVerify=false -c url."https://github.com/".insteadOf="git@github.com:" submodule update --init --recursive \
+    && chown $USER:dockerusers /E3SM \
+    && chmod -R 777 /E3SM
 
 RUN cd /E3SM \
     && cd /.cime \
@@ -136,12 +137,8 @@ RUN cd /E3SM \
 
 # Provide a symlink between ncap and ncap2 for OLMT 
 # Switch to using modeluser for test build (so it can find the ~/.cime docker machine configuration files)
-RUN ln -s /usr/bin/ncap2 /usr/bin/ncap \
-    && chown $USER:dockerusers /E3SM \
-    && chmod -R 777 /E3SM \
-    && export USER=${USER}
 
-RUN ln -sf /usr/bin/python3 /usr/bin/python
+RUN ln -sf /usr/bin/python3 /usr/bin/python && ln -s /usr/bin/ncap2 /usr/bin/ncap
 
 # Set user
 USER ${USER}
